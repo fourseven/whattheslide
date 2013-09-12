@@ -1,0 +1,313 @@
+# Starting with meteor
+curl https://install.meteor.com | /bin/sh
+npm install -g meteorite
+
+# Generate app
+mrt create whattheslide
+cd whattheslide
+mkdir -p client/compatibility public private server lib tests
+mrt
+
+mv *.css client
+mv whattheslide.js lib/application.js
+
+// client/*.css
+/* CSS declarations go here */
+* {
+  box-sizing: border-box;
+}
+
+h1 {
+  color: #333;
+}
+
+# Create Slide collections/models
+// lib/slides.js
+Slides = new Meteor.Collection("slides");
+
+// console
+Slides.insert({order: 1, content: "# Meteor.js Intro"})
+
+# Displaying slides
+// client/slides.html
+<template name="slides">
+<div class="slides">
+{{#each slides}}
+{{> slide}}
+{{/each}}
+</div>
+</template>
+
+<template name="slide">
+<header>{{title}}</header>
+<div class="slide">
+<section class="middle">
+{{{content}}}
+</section>
+</div>
+</template>
+
+
+// client/slides.js
+Template.slides.slides = function () {
+  return Slides.find({}, {sort: {order: 1}});
+};
+Template.slide.title = function () {
+  return this.title || "Slide " + this.order;
+};
+
+
+// client/*.css
+section.middle {
+  line-height: 1.8;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  height: 350px;
+  width: 450px;
+}
+.slide {
+  position: relative;
+  overflow: hidden;
+  width: 450px;
+  height: 350px;
+  border: 1px solid black;
+  background-color: #333;
+  padding: 0 20px;
+}
+.slide, .slide h1, .slide h2, .slide h3, .slide h4 {
+  color: #f8f8f2;
+}
+
+// whattheslide.html
+<template name="hello">
+  <h1>Welcome to What The Slide!</h1>
+  <h2>Current Slides</h2>
+  {{> slides}}
+</template>
+
+
+// client/slides.html
+<template name="new_slide">
+  <form id="new_slide">
+    <label>Title (optional)</label>
+    <input type="text" name="title" />
+    <br />
+    <label>Order (optional)</label>
+    <input type="number" name="order" value="{{currentOrder}}" />
+    <br />
+    <label>Content</label>
+    <textarea name="content" />
+    <br />
+    <input type="submit" />
+  </form>
+</template>
+
+
+Template.new_slide.events = {
+  'submit': function (event) {
+    event.preventDefault();
+    var form={};
+
+    $.each($(event.currentTarget).serializeArray(), function() {
+        form[this.name] = this.value;
+    });
+    form['order'] = parseInt(form['order'], 10);
+    Slides.insert(form);
+  }
+};
+Template.new_slide.currentOrder = function () {
+  return Slides.find({}, {sort: {order: 1}}).count() + 1;
+};
+
+// *.html
+<template name="hello">
+  <h1>Welcome to What The Slide!</h1>
+  <h2>Current Slides</h2>
+  {{> slides}}
+  <h2>Add new slide</h2>
+  {{> new_slide}}
+</template>
+
+mrt add marked
+
+// client/slides.html
+<template name="slide">
+<header>{{title}}</header>
+<a href="" class="delete">delete</a>
+<div class="slide">
+<section class="middle">
+{{#markdown}}{{{content}}}{{/markdown}}
+</section>
+</div>
+</template>
+
+
+// client/slides.js
+Template.slide.events =  {
+  'click .delete': function (event) {
+    event.preventDefault();
+    Slides.remove({_id: this._id});
+  }
+};
+
+mrt add router
+// *.html
+{{renderPage}}
+
+// client/slides.js
+Template.new_slide.events = {
+  'submit': function (event) {
+    event.preventDefault();
+    var form={};
+
+    $.each($(event.currentTarget).serializeArray(), function() {
+        form[this.name] = this.value;
+    });
+    form['order'] = parseInt(form['order'] || 1, 10);
+    Slides.insert(form);
+    Meteor.Router.to('/');
+  }
+};
+Meteor.Router.add({
+  '': 'hello',
+  '/slides/new': 'new_slide'
+});
+
+// *.html
+<template name="hello">
+  <h1>Welcome to What The Slide!</h1>
+  <!-- <h2>Current Slides <a href="/presentation">Show Presentation</a></h2> -->
+  {{> slides}}
+  <h2>Add new slide</h2>
+  <a href="/slides/new">New slide</a>
+</template>
+
+# Presentation mode
+// *.html
+<template name="presentation">
+  <div class="presentation">
+    {{> slides}}
+  </div>
+</template>
+
+Template.slide.current = function () {
+  currentId = (Session.get('selectedSlide') || Slides.findOne({})._id);
+  return (currentId === this._id) ? "current" : undefined;
+};
+
+// client/slides.html
+<template name="slide">
+<header>{{title}}</header>
+<a href="" class="delete">delete</a>
+<div class="slide {{current}}">
+<section class="middle">
+{{#markdown}}{{{content}}}{{/markdown}}
+</section>
+</div>
+</template>
+
+// client/slides.js
+Meteor.Router.add({
+  '': 'hello',
+  '/slides/new': 'new_slide',
+  '/presentation': 'presentation'
+});
+
+// client/*.css
+.presentation .slides {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
+.presentation section.middle {
+  height: 700px;
+  width: 900px;
+}
+.presentation .slide {
+  font-size: 2em;
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-top: -350px;
+  width: 900px;
+  height: 700px;
+}
+.presentation .slide.current {
+  visibility: visible;
+  display: block;
+  margin-left: -450px;
+}
+.presentation header, .presentation .delete {
+  display: none;
+}
+
+
+# Events
+// client/slides.js
+prevId = function(arrayCursor, id) {
+  array = arrayCursor.map(function(item){
+    return item._id;
+  });
+  if (!id) return array[0];
+  index = array.indexOf(id);
+  return array[Math.max(index - 1, 0)];
+};
+
+nextId = function (arrayCursor, id) {
+  array = arrayCursor.map(function(item){
+    return item._id;
+  });
+  if (!id) return array[array.length - 1];
+  index = array.indexOf(id);
+  return array[Math.min(index + 1, array.length - 1)];
+};
+
+Template.presentation.created = function (event) {
+  if (!this.keydown) {
+    Slides.find({}, {sort: {order: 1}}).observe({
+      added: function (item) {
+        Session.set('selectedSlide', Slides.findOne({}, {sort: {order: 1}})._id);
+      }
+    });
+    this.keydown = $(document).on('keydown', function(event) {
+      switch (event.which) {
+        case 37:
+          // back
+          Session.set('selectedSlide', prevId(Slides.find({}, {sort: {order: 1}}), Session.get('selectedSlide')));
+          break;
+        case 39:
+          // next
+          Session.set('selectedSlide', nextId(Slides.find({}, {sort: {order: 1}}), Session.get('selectedSlide')));
+          break;
+      }
+    });
+  }
+};
+
+Template.presentation.destroyed = function (event) {
+  $(document).off('keydown', this.keydown);
+};
+
+
+
+
+
+
+
+Moving to publish
+mrt remove autopublish
+
+
+// server/slides.js
+Meteor.publish("slides", function (){
+  return Slides.find({}, {sort: {order: 1}});
+});
+
+// client/slides.js
+Meteor.subscribe("slides");
+
+https://github.com/oortcloud/unofficial-meteor-faq

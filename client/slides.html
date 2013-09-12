@@ -1,0 +1,32 @@
+<template name="slides">
+<div class="slides">
+{{#each slides}}
+{{> slide}}
+{{/each}}
+</div>
+</template>
+
+<template name="slide">
+<header>{{title}}</header>
+<a href="" class="delete">delete</a>
+<div class="slide {{current}}">
+<section class="middle">
+{{#markdown}}{{{content}}}{{/markdown}}
+</section>
+</div>
+</template>
+
+<template name="new_slide">
+  <form id="new_slide">
+    <label>Title (optional)</label>
+    <input type="text" name="title" />
+    <br />
+    <label>Order (optional)</label>
+    <input type="number" name="order" value="{{currentOrder}}" />
+    <br />
+    <label>Content</label>
+    <textarea name="content" />
+    <br />
+    <input type="submit" />
+  </form>
+</template>

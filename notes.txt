@@ -1,0 +1,49 @@
+What is Meteor?
+
+Node.js web framework built around a whole bunch of packages
+Websockets
+Livereload
+Mongo DB (minimongo)
+Templating (Handlebars.js)
+"insecure"
+"autopublish"
+accounts-password
+accounts-ui
+
+partial page reloads based on updated attributes
+
+Uses fibers extensively, so not typical js async callback style of doing things
+
+/app
+  /client  - sent to client
+    /compatibility - files in here get global scope access (otherwise they are wrapped in a new function scope automatically)
+  /public  - acts like rails public folder
+  /private - only served through assets api (serverside files, like i18n)
+  /server - serverside logic, Meteor.call definitions for example
+  /lib    - shared code, first files that are loaded on app initialization
+  /tests  - test
+
+mkdir -p client/compatibility public private server lib test
+
+
+Meteorite
+
+meteor deploy [site].meteor.com
+
+
+Starting with meteor
+curl https://install.meteor.com | /bin/sh
+npm install -g meteorite
+
+slides
+  id
+  order
+  content (in MD)
+  title (opt)
+
+Weaknesses - iterating through collection
+next and previous
+background tasks
+
+https://github.com/fourseven/meteor-scss
+

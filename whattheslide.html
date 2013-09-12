@@ -1,0 +1,22 @@
+<head>
+  <title>whattheslide</title>
+</head>
+
+<body>
+  {{renderPage}}
+</body>
+
+
+<template name="hello">
+  <h1>Welcome to What The Slide!</h1>
+  <h2>Current Slides <a href="/presentation">Show Presentation</a></h2>
+  {{> slides}}
+  <h2>Add new slide</h2>
+  <a href="/slides/new">New slide</a>
+</template>
+
+<template name="presentation">
+  <div class="presentation">
+    {{> slides}}
+  </div>
+</template>
